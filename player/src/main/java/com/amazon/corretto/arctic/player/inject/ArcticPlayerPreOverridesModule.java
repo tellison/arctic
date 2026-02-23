@@ -73,6 +73,7 @@ public final class ArcticPlayerPreOverridesModule extends ArcticModule {
         timings.setScDelayMs(getConfig().getLong(InjectionKeys.PRE_OVERRIDES_TIMINGS_SC));
         timings.setMinWaitNs(getConfig().getLong(InjectionKeys.PRE_OVERRIDES_TIMINGS_MIN));
         timings.setMaxWaitNs(getConfig().getLong(InjectionKeys.PRE_OVERRIDES_TIMINGS_MAX));
+        timings.setMinWaitFloorMs(getConfig().getLong(InjectionKeys.PRE_OVERRIDES_TIMINGS_MIN_FLOOR));
 
         bind(ArcticTestTimings.class).toInstance(timings);
     }

@@ -26,6 +26,7 @@ public class ArcticTestTimings {
     private static final long DEFAULT_START_DELAY = 300;
     private static final long DEFAULT_SC_DELAY = 50;
     private static final long DEFAULT_MIN_WAIT = 1000000;
+    private static final long DEFAULT_MIN_WAIT_FLOOR = -1;
     private static final long DEFAULT_MAX_WAIT = -1;
 
     /**
@@ -47,6 +48,12 @@ public class ArcticTestTimings {
      * TODO: Update tests and rename to minWaitMs.
      */
     private long minWaitNs = DEFAULT_MIN_WAIT;
+
+    /**
+     * Indicates the lower floor for event timing, such that at least this interval in milliseconds must be waited before the next event.
+     * This is to enable alleviating intermittent hangs with overwelmed/overflowing linux/X11 event queues.
+     */
+    private long minWaitFloorMs = DEFAULT_MIN_WAIT_FLOOR;
 
     /**
      * Represents how much at most we will wait before we send the next event. A value of -1 is treated equivalent to

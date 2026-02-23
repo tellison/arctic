@@ -82,6 +82,7 @@ public final class InjectionKeys {
     public static final String PRE_OVERRIDES_TIMINGS_START = PREFIX + "pre.overrides.timings.start";
     public static final String PRE_OVERRIDES_TIMINGS_SC = PREFIX + "pre.overrides.timings.sc";
     public static final String PRE_OVERRIDES_TIMINGS_MIN = PREFIX + "pre.overrides.timings.min";
+    public static final String PRE_OVERRIDES_TIMINGS_MIN_FLOOR = PREFIX + "pre.overrides.timings.min.floor";
     public static final String PRE_OVERRIDES_TIMINGS_MAX = PREFIX + "pre.overrides.timings.max";
     public static final String PRE_OVERRIDES_MOUSE_OFFSETS = PREFIX + "pre.overrides.mouse.offsets";
     public static final String PRE_OVERRIDES_MOUSE_OFFSETS_X = PREFIX + "pre.overrides.mouse.offsets.x";

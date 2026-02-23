@@ -20,10 +20,13 @@ import java.awt.Color;
 import java.util.Objects;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
+import java.lang.reflect.InvocationTargetException;
 
 import com.amazon.corretto.arctic.common.inject.CommonInjectionKeys;
 import com.amazon.corretto.arctic.common.model.gui.ArcticFrame;
 import com.amazon.corretto.arctic.common.model.gui.ScreenArea;
+import com.amazon.corretto.arctic.api.exception.ArcticException;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import jakarta.inject.Singleton;
@@ -80,6 +83,19 @@ public final class WorkbenchManager {
      */
     public void position(final ArcticFrame workbench) {
         initializeWorkbench();
+        if (SwingUtilities.isEventDispatchThread()) {
+            positionWorkbenchJFrame(workbench);
+        } else {
+            try {
+                SwingUtilities.invokeAndWait(() -> positionWorkbenchJFrame(workbench));
+            } catch (final InterruptedException | InvocationTargetException e) {
+                log.error("Unable to position workbench", e);
+                throw new ArcticException("Unable to position workbench", e);
+            }
+        }
+    }
+
+    private void positionWorkbenchJFrame(final ArcticFrame workbench) {
         if (!Objects.equals(workbench.getTitle(), wb.getTitle())) {
             wb.setTitle(workbench.getTitle());
         }
@@ -101,31 +117,71 @@ public final class WorkbenchManager {
      * Ensure the workbench is at the back of the screen.
      */
     public void toBack() {
-        wb.toBack();
+        if (SwingUtilities.isEventDispatchThread()) {
+            wb.toBack();
+        } else {
+            try {
+                SwingUtilities.invokeAndWait(() -> wb.toBack());
+            } catch (final InterruptedException | InvocationTargetException e) {
+                log.error("Unable to position workbench to background", e);
+                throw new ArcticException("Unable to position workbench to background", e);
+            }
+        }
     }
 
     private void initializeWorkbench() {
         if (wb == null) {
-            wb = new JFrame(defaultTitle);
-            wb.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-            wb.setFocusableWindowState(false);
-            wb.setSize(defaultWidth, defaultHeight);
-            wb.setLocationRelativeTo(null);
-            final JPanel bgPanel = new JPanel();
-            bgPanel.setBackground(new Color(defaultColor));
-            wb.setBackground(new Color(defaultColor));
-            wb.setContentPane(bgPanel);
-            log.debug("Workbench background {}", defaultColor);
-            wb.setVisible(true);
-            wb.toBack();
+            if (SwingUtilities.isEventDispatchThread()) {
+                createWorkbenchJFrame();
+            } else {
+                try {
+                    SwingUtilities.invokeAndWait(() -> createWorkbenchJFrame());
+                } catch (final InterruptedException | InvocationTargetException e) {
+                    log.error("Unable to initialize workbench", e);
+                    throw new ArcticException("Unable to initialize workbench", e);
+                }
+            }
         }
     }
 
+    private void createWorkbenchJFrame() {
+        wb = new JFrame(defaultTitle);
+        wb.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+        wb.setFocusableWindowState(false);
+        wb.setSize(defaultWidth, defaultHeight);
+        wb.setLocationRelativeTo(null);
+        final JPanel bgPanel = new JPanel();
+        bgPanel.setBackground(new Color(defaultColor));
+        wb.setBackground(new Color(defaultColor));
+        wb.setContentPane(bgPanel);
+        log.debug("Workbench background {}", defaultColor);
+        wb.setVisible(true);
+        wb.toBack();
+    }
+
     public void hide() {
-        wb.setVisible(false);
+        if (SwingUtilities.isEventDispatchThread()) {
+            wb.setVisible(false);
+        } else {
+            try {
+                SwingUtilities.invokeAndWait(() -> wb.setVisible(false));
+            } catch (final InterruptedException | InvocationTargetException e) {
+                log.error("Unable to hide workbench", e);
+                throw new ArcticException("Unable to hide workbench", e);
+            }
+        }
     }
 
     public void show() {
-        wb.setVisible(true);
+        if (SwingUtilities.isEventDispatchThread()) {
+            wb.setVisible(true);
+        } else {
+            try {
+                SwingUtilities.invokeAndWait(() -> wb.setVisible(true));
+            } catch (final InterruptedException | InvocationTargetException e) {
+                log.error("Unable to show workbench", e);
+                throw new ArcticException("Unable to show workbench", e);
+            }
+        }
     }
 }

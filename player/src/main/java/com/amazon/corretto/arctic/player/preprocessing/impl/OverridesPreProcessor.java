@@ -129,6 +129,8 @@ public final class OverridesPreProcessor implements ArcticPlayerPreProcessor {
                 timings::setMaxWaitNs, false);
         overrideTiming(OVERRIDE_THRESHOLD, newTimings.getMinWaitNs(), timings.getMinWaitNs(),
                 timings::setMinWaitNs, true);
+        overrideTiming(OVERRIDE_THRESHOLD, newTimings.getMinWaitFloorMs(), timings.getMinWaitFloorMs(),
+                timings::setMinWaitFloorMs, true);
         overrideTiming(OVERRIDE_THRESHOLD, newTimings.getScDelayMs(), timings.getScDelayMs(),
                 timings::setScDelayMs, true);
         overrideTiming(OVERRIDE_THRESHOLD, newTimings.getStartDelayMs(), timings.getStartDelayMs(),

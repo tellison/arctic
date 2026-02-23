@@ -25,18 +25,23 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
+import java.lang.reflect.InvocationTargetException;
 
 import com.amazon.corretto.arctic.common.inject.CommonInjectionKeys;
 import com.amazon.corretto.arctic.common.model.gui.ArcticFrame;
 import com.amazon.corretto.arctic.common.model.gui.ScreenArea;
+import com.amazon.corretto.arctic.api.exception.ArcticException;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import jakarta.inject.Singleton;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Handles the concept of shades in the screen. A shade is a small window that will always be on top and can be used to
  * hide parts of a test that are known to change, like timers and dates.
  */
+@Slf4j
 @Singleton
 public class ShadeManager {
     private final String defaultTitle;
@@ -76,7 +81,24 @@ public class ShadeManager {
      * {@link ShadeManager#getShades()}.
      */
     public void position(final List<ArcticFrame> newShades) {
-        spawnShade(newShades.size() - shades.size());
+        if (SwingUtilities.isEventDispatchThread()) {
+            positionJFrames(newShades);
+        } else {
+            try {
+                SwingUtilities.invokeAndWait(() -> positionJFrames(newShades));
+            } catch (final InterruptedException | InvocationTargetException e) {
+                log.error("Unable to position new shades", e);
+                throw new ArcticException("Unable to position new shades", e);
+            }
+        }
+    }
+
+    /**
+     * Position the set of newShades, ensuring new ones are created if the current shade set is not
+     * large enough (including currently invisible shades)
+     */
+    private void positionJFrames(final List<ArcticFrame> newShades) {
+        createNewShades(newShades.size() - shades.size());
         final Iterator<JFrame> shadeFrameIterator = shades.iterator();
 
         for (final ArcticFrame s: newShades) {
@@ -88,7 +110,39 @@ public class ShadeManager {
     }
 
     public void spawnShade() {
-        shades.stream().filter(it -> !it.isVisible()).findAny().orElseGet(this::createShade).setVisible(true);
+        spawnShade(true);
+    }
+
+    /**
+     * If useInvisible is true then any currently invisible shade can be re-spawned.
+     * If useInvisible is false then a brand new shade is being asked for.
+     */
+    private void spawnShade(boolean useInvisible) {
+        if (useInvisible) {
+            // Use an existing invisible shade if one present, else create a new one
+            if (SwingUtilities.isEventDispatchThread()) {
+                shades.stream().filter(it -> !it.isVisible()).findAny().orElseGet(this::createShade).setVisible(true);
+            } else {
+                try {
+                    SwingUtilities.invokeAndWait(() -> shades.stream().filter(it -> !it.isVisible()).findAny().orElseGet(this::createShade).setVisible(true));
+                } catch (final InterruptedException | InvocationTargetException e) {
+                    log.error("Unable to spawn shade", e);
+                    throw new ArcticException("Unable to spawn shade", e);
+                }
+            }
+        } else {
+            // A new shade is being requested to be created
+            if (SwingUtilities.isEventDispatchThread()) {
+                createShade().setVisible(true);
+            } else {
+                try {
+                    SwingUtilities.invokeAndWait(() -> createShade().setVisible(true));
+                } catch (final InterruptedException | InvocationTargetException e) {
+                    log.error("Unable to spawn shade", e);
+                    throw new ArcticException("Unable to spawn shade", e);
+                }
+            }
+        }
     }
 
     /**
@@ -114,9 +168,10 @@ public class ShadeManager {
         shades.forEach(it -> it.setVisible(false));
     }
 
-    private void spawnShade(final int numberOfShades) {
+    private void createNewShades(final int numberOfShades) {
         for (int i = 0; i < numberOfShades; i++) {
-            spawnShade();
+            // Create a new shade
+            spawnShade(false);
         }
     }
 
